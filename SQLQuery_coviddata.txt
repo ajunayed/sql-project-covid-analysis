@@ -1,0 +1,66 @@
+SELECT *
+FROM COVIDDATA.dbo.covidvaccination
+
+Select * 
+from  COVIDDATA.dbo.coviddeaths$
+select Distinct(location)
+from COVIDDATA.dbo.coviddeaths$
+where location like 'S%'
+order by 1,2 Desc
+
+-- Distinct continent 
+Select Distinct(continent)
+from COVIDDATA.dbo.coviddeaths$
+where continent is not null
+
+ 
+ --Find out possibility of covid death in a specific country
+ select location,date,total_cases,total_deaths,(total_deaths/total_cases)*100 as Death_percentage
+ from COVIDDATA.dbo.coviddeaths$
+ where continent is not null and location like 'Switzerland'
+ order by 1,2 Desc
+
+ --what % of population infected in a specified country
+ select location,date,population,total_cases,(total_cases/population)*100 as percent_of_population_infected
+ from COVIDDATA.dbo.coviddeaths$
+ where location = 'Switzerland'
+ order by 5 Desc
+
+ --which country has the highest infection rate
+ select location,population,Max(total_cases) as Max_infected_rate,Max((total_cases/population))*100 as percent_of_population_infected
+ from COVIDDATA.dbo.coviddeaths$
+ group by location,population
+  order by 4 Desc
+
+  
+  --Highest covid death country
+  select location,Max(cast(total_deaths as int)) as Total_death
+  from COVIDDATA.dbo.coviddeaths$
+  where continent Is not null
+  group by location
+  order by 2 Desc
+
+  --Highest covid death in continent
+  select continent,Max(cast(total_deaths as int)) as Total_death
+  from COVIDDATA.dbo.coviddeaths$
+  where continent Is not null
+  group by continent
+  order by 2 Desc
+
+  --Global covid scenerio 
+  select sum(new_cases) as Total_cases,sum(cast(new_deaths as int)) as Total_deaths,sum(cast(new_deaths as int))/sum(new_cases)*100 as Death_percentage
+  from COVIDDATA.dbo.coviddeaths$
+  where continent is not null
+  order by 1,2
+
+
+  --vaccination
+  select * 
+  from COVIDDATA.[dbo].[covidvaccination]
+
+  --FIND OUT TOTAL NO OF PEOPLE GOT ATLEAST ONE VACCINE
+  SELECT cd.continent,cd.location,cd.date,cd.population,cv.new_vaccinations,sum(convert(bigint,cv.new_vaccinations)) over (partition by cd.location order by cd.location,cd.date) as RollingVaccinated
+  from COVIDDATA..coviddeaths$ cd
+  join COVIDDATA..covidvaccination cv on cd.location=cv.location and cd.date=cv.date
+  where cd.continent is not null
+  order by 2,3
